@@ -66,16 +66,16 @@
 # --------------------------------------------------------
 
 # 演習問題 別解
-def stop(i)
-  if i % 3 == 0
-    sleep(1)
-  end
-end
+# def stop(i)
+#   if i % 3 == 0
+#     sleep(1)
+#   end
+# end
 
-(1..30).each do |i|
-    puts i
-    stop(i)
-end
+# (1..30).each do |i|
+#     puts i
+#     stop(i)
+# end
 
 
 # # 正解
