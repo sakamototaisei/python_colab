@@ -59,7 +59,7 @@ def order(side, price, size)
 end
 
 
-def get_balance(coin_name)
+def get_my_monety(coin_name)
   key = API_KEY
   secret = API_SECRET
   
@@ -82,5 +82,71 @@ def get_balance(coin_name)
   https.use_ssl = true
   response = https.request(options)
   response_hash = JSON.parse(response.body)
-  puts response_hash.find {|n| n["currency_code"] == coin_name}
+  response_hash.find {|n| n["currency_code"] == coin_name}
+end
+
+
+def ifdoneOCO
+  key = API_KEY
+  secret = API_SECRET
+  
+  timestamp = Time.now.to_i.to_s
+  method = "POST"
+  uri = URI.parse("https://api.bitflyer.com")
+  uri.path = "/v1/me/sendparentorder"
+  # order_method: 注文方法です。以下の値のいずれかを指定してください。省略した場合の値は "SIMPLE" です。
+  # "SIMPLE": 1 つの注文を出す特殊注文です。
+  # "IFD": IFD 注文を行います。一度に 2 つの注文を出し、最初の注文が約定したら 2 つめの注文が自動的に発注される注文方法です。
+  # "OCO": OCO 注文を行います。2 つの注文を同時に出し、一方の注文が成立した際にもう一方の注文が自動的にキャンセルされる注文方法です。
+  # "IFDOCO": IFD-OCO 注文を行います。最初の注文が約定した後に自動的に OCO 注文が発注される注文方法です。
+  
+  # condition_type: 必須。注文の執行条件です。以下の値のうちいずれかを指定してください。
+  # "LIMIT": 指値注文。
+  # "MARKET" 成行注文。
+  # "STOP": ストップ注文。
+  # "STOP_LIMIT": ストップ・リミット注文。
+  # "TRAIL": トレーリング・ストップ注文。
+  body = '{
+  "order_method": "IFDOCO",
+  "minute_to_expire": 10000,
+  "time_in_force": "GTC",
+  "parameters": [{
+    "product_code": "BTC_JPY",
+    "condition_type": "LIMIT",
+    "side": "BUY",
+    "price": 3800000,
+    "size": 0.001
+  },
+  {
+    "product_code": "BTC_JPY",
+    "condition_type": "LIMIT",
+    "side": "SELL",
+    "price": 4000000,
+    "size": 0.001
+  },
+  {
+    "product_code": "BTC_JPY",
+    "condition_type": "STOP_LIMIT",
+    "side": "SELL",
+    "price": 3600000,
+    "trigger_price": 29000,
+    "size": 0.001
+  }]
+}'
+  
+  text = timestamp + method + uri.request_uri + body
+  sign = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new("sha256"), secret, text)
+  
+  options = Net::HTTP::Post.new(uri.request_uri, initheader = {
+    "ACCESS-KEY" => key,
+    "ACCESS-TIMESTAMP" => timestamp,
+    "ACCESS-SIGN" => sign,
+    "Content-Type" => "application/json"
+  });
+  options.body = body
+  
+  https = Net::HTTP.new(uri.host, uri.port)
+  https.use_ssl = true
+  response = https.request(options)
+  puts response.body
 end
